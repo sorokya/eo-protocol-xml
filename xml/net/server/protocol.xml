@@ -1125,22 +1125,22 @@
     <packet family="Welcome" action="Reply">
         <comment>Reply to selecting a character / entering game</comment>
         <field name="welcome_code" type="WelcomeCode"/>
-        <chunked>
-            <switch field="welcome_code">
-                <case value="SelectCharacter">
-                    <field name="session_id" type="short"/>
-                    <field name="character_id" type="int"/>
-                    <field name="map_id" type="short"/>
-                    <array name="map_rid" type="short" length="2"/>
-                    <field name="map_file_size" type="three"/>
-                    <array name="eif_rid" type="short" length="2"/>
-                    <field name="eif_length" type="short"/>
-                    <array name="enf_rid" type="short" length="2"/>
-                    <field name="enf_length" type="short"/>
-                    <array name="esf_rid" type="short" length="2"/>
-                    <field name="esf_length" type="short"/>
-                    <array name="ecf_rid" type="short" length="2"/>
-                    <field name="ecf_length" type="short"/>
+        <switch field="welcome_code">
+            <case value="SelectCharacter">
+                <field name="session_id" type="short"/>
+                <field name="character_id" type="int"/>
+                <field name="map_id" type="short"/>
+                <array name="map_rid" type="short" length="2"/>
+                <field name="map_file_size" type="three"/>
+                <array name="eif_rid" type="short" length="2"/>
+                <field name="eif_length" type="short"/>
+                <array name="enf_rid" type="short" length="2"/>
+                <field name="enf_length" type="short"/>
+                <array name="esf_rid" type="short" length="2"/>
+                <field name="esf_length" type="short"/>
+                <array name="ecf_rid" type="short" length="2"/>
+                <field name="ecf_length" type="short"/>
+                <chunked>
                     <field name="name" type="string"/>
                     <break/>
                     <field name="title" type="string"/>
@@ -1161,8 +1161,10 @@
                     <field name="settings" type="ServerSettings"/>
                     <field name="login_message_code" type="LoginMessageCode"/>
                     <break/>
-                </case>
-                <case value="EnterGame">
+                </chunked>
+            </case>
+            <case value="EnterGame">
+                <chunked>
                     <break/>
                     <array name="news" type="string" length="9" delimited="true"/>
                     <field name="weight" type="Weight"/>
@@ -1171,9 +1173,9 @@
                     <array name="spells" type="Spell"/>
                     <break/>
                     <field name="nearby" type="NearbyInfo"/>
-                </case>
-            </switch>
-        </chunked>
+                </chunked>
+            </case>
+        </switch>
     </packet>
 
     <packet family="AdminInteract" action="Reply">
