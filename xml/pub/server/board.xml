@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol>
+    <struct name="BoardPostLengthsRecord">
+        <comment>
+            Length triple for a single board post. Read inside a chunked block — each
+            short is followed by a 0xFF delimiter. The corresponding string bytes are
+            stored later, after the chunked block ends.
+        </comment>
+        <length name="name_length" type="short"/>
+        <break/>
+        <length name="subject_length" type="short"/>
+        <break/>
+        <length name="body_length" type="short"/>
+        <break/>
+    </struct>
+
+    <struct name="BoardRecord">
+        <comment>
+            A single board section. The entire record occupies the byte span declared
+            for this board in BoardFile.board_sizes.
+
+            On-disk layout:
+              chunked:
+                post_count : short, 0xFF
+                for each post: name_length, subject_length, body_length (each short, 0xFF)
+              end chunked
+              for each post:
+                name    : Windows-1252 bytes, no terminator, length = name_length
+                subject : Windows-1252 bytes, no terminator, length = subject_length
+                body    : Windows-1252 bytes, no terminator, length = body_length
+
+            Strings are concatenated back-to-back with no length prefix and no chunk
+            delimiters between them. The reversible map/sign byte transformation used
+            elsewhere in the EO encoding is NOT applied to these strings. Carriage
+            returns (0x0D) inside body text are literal line breaks.
+
+            An empty board (post_count = 0) is exactly 3 bytes: 01 FE FF.
+        </comment>
+        <chunked>
+            <length name="post_count" type="short"/>
+            <break/>
+            <array name="post_lengths" type="BoardPostLengthsRecord" length="post_count"/>
+        </chunked>
+        <!--
+            After the chunked block, the concatenated string data follows. Each post
+            contributes name_length + subject_length + body_length bytes, in that order,
+            using the lengths decoded above. This cross-block dependency cannot be
+            expressed as <field> entries in the schema.
+        -->
+    </struct>
+
+    <struct name="BoardFile">
+        <comment>
+            Endless Board File (dbbXXX.ebf). Stores all posts for the eight in-game
+            boards on a server.
+
+            File layout:
+              board_sizes : 8 × int (32 bytes total) — byte size of each board section
+              boards      : 8 × BoardRecord, each sized exactly board_sizes[i]
+
+            Total file size = 32 + sum(board_sizes). Boards are 1-indexed in game but
+            stored in array order 0..7.
+        </comment>
+        <array name="board_sizes" type="int" length="8">
+            <comment>Byte size of each of the 8 board sections that follow</comment>
+        </array>
+        <array name="boards" type="BoardRecord" length="8">
+            <comment>
+                The i-th board occupies exactly board_sizes[i] bytes. Readers should
+                slice each section by its declared size before parsing, since the
+                chunked metadata alone does not bound the trailing string data.
+            </comment>
+        </array>
+    </struct>
+</protocol>
